@@ -127,59 +127,293 @@ QByteArray ModBus::sendRawRequestBlocking(quint8 slaveAddress, quint8 functionCo
     return response;
 }
 
-quint64 ModBus::readRegisters(quint8 slaveAddress, quint16 dataStartAddress, quint8 count)
+quint64 ModBus::readCoils(quint8 slaveAddress, quint16 dataStartAddress, quint16 count, quint8 functionCode)
 {
     if (m_debug)
     {
-        fprintf(stdout, "DEBUG ModBus::readRegisters().\n");
+        fprintf(stdout, "DEBUG ModBus::readCoils().\n");
         fflush(stdout);
     }
+
+    QByteArray payload;
+
+    payload += (unsigned char)(dataStartAddress >> 8);
+    payload += (unsigned char)(dataStartAddress & 0xff);
+    payload += (unsigned char)(count >> 8);
+    payload += (unsigned char)(count & 0xff);
+
+    return writeTelegramToQueue(new ModBusTelegram(slaveAddress, functionCode, payload));
 }
 
-quint64 ModBus::writeRegisters(quint8 slaveAddress, quint16 dataStartAddress, QList<quint16> data)
+quint64 ModBus::readDiscreteInputs(quint8 slaveAddress, quint16 dataStartAddress, quint16 count, quint8 functionCode)
 {
     if (m_debug)
     {
-        fprintf(stdout, "DEBUG ModBus::writeRegisters().\n");
+        fprintf(stdout, "DEBUG ModBus::readDiscreteInputs().\n");
         fflush(stdout);
     }
+
+    QByteArray payload;
+
+    payload += (unsigned char)(dataStartAddress >> 8);
+    payload += (unsigned char)(dataStartAddress & 0xff);
+    payload += (unsigned char)(count >> 8);
+    payload += (unsigned char)(count & 0xff);
+
+    return writeTelegramToQueue(new ModBusTelegram(slaveAddress, functionCode, payload));
 }
 
-quint16 ModBus::readRegister(quint8 slaveAddress, quint16 dataAddress)
+quint64 ModBus::readHoldingRegisters(quint8 slaveAddress, quint16 dataStartAddress, quint8 count, quint8 functionCode)
 {
     if (m_debug)
     {
-        fprintf(stdout, "DEBUG ModBus::readRegister().\n");
+        fprintf(stdout, "DEBUG ModBus::readHoldingRegisters().\n");
         fflush(stdout);
     }
+
+    QByteArray payload;
+
+    payload += (unsigned char)(dataStartAddress >> 8);
+    payload += (unsigned char)(dataStartAddress & 0xff);
+    payload += (unsigned char)(count >> 8);
+    payload += (unsigned char)(count & 0xff);
+
+    return writeTelegramToQueue(new ModBusTelegram(slaveAddress, functionCode, payload));
 }
 
-quint16 ModBus::writeRegister(quint8 slaveAddress, quint16 dataAddress, quint16 data)
+quint64 ModBus::readInputRegisters(quint8 slaveAddress, quint16 dataStartAddress, quint8 count, quint8 functionCode)
 {
     if (m_debug)
     {
-        fprintf(stdout, "DEBUG ModBus::writeRegister().\n");
+        fprintf(stdout, "DEBUG ModBus::readInputRegisters().\n");
         fflush(stdout);
     }
+
+    QByteArray payload;
+
+    payload += (unsigned char)(dataStartAddress >> 8);
+    payload += (unsigned char)(dataStartAddress & 0xff);
+    payload += (unsigned char)(count >> 8);
+    payload += (unsigned char)(count & 0xff);
+
+    return writeTelegramToQueue(new ModBusTelegram(slaveAddress, functionCode, payload));
 }
 
-quint64 ModBus::readDiscreteInput(quint8 slaveAddress, quint16 dataAddress)
+quint64 ModBus::writeSingleCoil(quint8 slaveAddress, quint16 dataAddress, bool on, quint8 functionCode)
 {
     if (m_debug)
     {
-        fprintf(stdout, "DEBUG ModBus::readDiscreteInput().\n");
+        fprintf(stdout, "DEBUG ModBus::writeSingleCoil().\n");
         fflush(stdout);
     }
+
+    QByteArray payload;
+
+    payload += (unsigned char)(dataAddress >> 8);
+    payload += (unsigned char)(dataAddress & 0xff);
+    payload += (unsigned char)(on ? 0xff : 0x00);
+    payload += (unsigned char)0x00;
+
+    return writeTelegramToQueue(new ModBusTelegram(slaveAddress, functionCode, payload));
 }
 
-quint64 ModBus::writeCoil(quint8 slaveAddress, quint16 dataAddress, quint8 bit, bool data)
+quint64 ModBus::writeSingleRegister(quint8 slaveAddress, quint16 dataAddress, quint16 data, quint8 functionCode)
 {
     if (m_debug)
     {
-        fprintf(stdout, "DEBUG ModBus::writeCoil().\n");
+        fprintf(stdout, "DEBUG ModBus::writeSingleRegister().\n");
         fflush(stdout);
     }
+
+    QByteArray payload;
+
+    payload += (unsigned char)(dataAddress >> 8);
+    payload += (unsigned char)(dataAddress & 0xff);
+    payload += (unsigned char)(data >> 8);
+    payload += (unsigned char)(data & 0xff);
+
+    return writeTelegramToQueue(new ModBusTelegram(slaveAddress, functionCode, payload));
 }
+
+quint64 ModBus::readExceptionStatus(quint8 slaveAddress, quint8 functionCode)
+{
+    if (m_debug)
+    {
+        fprintf(stdout, "DEBUG ModBus::readExceptionStatus().\n");
+        fflush(stdout);
+    }
+
+    QByteArray payload;
+
+    return writeTelegramToQueue(new ModBusTelegram(slaveAddress, functionCode, payload));
+}
+
+quint64 ModBus::readDiagnosticCounter(quint8 slaveAddress, quint8 subFunctionCode, QByteArray data, quint8 functionCode)
+{
+    if (m_debug)
+    {
+        fprintf(stdout, "DEBUG ModBus::readDiagnosticCounter().\n");
+        fflush(stdout);
+    }
+
+    QByteArray payload;
+
+    payload += (unsigned char)(subFunctionCode >> 8);
+    payload += (unsigned char)(subFunctionCode & 0xff);
+    payload += data;
+
+    return writeTelegramToQueue(new ModBusTelegram(slaveAddress, functionCode, payload));
+}
+
+quint64 ModBus::getCommEventCounter(quint8 slaveAddress, quint8 functionCode)
+{
+    if (m_debug)
+    {
+        fprintf(stdout, "DEBUG ModBus::getCommEventCounter().\n");
+        fflush(stdout);
+    }
+
+    QByteArray payload;
+
+    return writeTelegramToQueue(new ModBusTelegram(slaveAddress, functionCode, payload));
+}
+
+quint64 ModBus::getCommEventLog(quint8 slaveAddress, quint8 functionCode)
+{
+    if (m_debug)
+    {
+        fprintf(stdout, "DEBUG ModBus::getCommEventLog().\n");
+        fflush(stdout);
+    }
+
+    QByteArray payload;
+
+    return writeTelegramToQueue(new ModBusTelegram(slaveAddress, functionCode, payload));
+}
+
+quint64 ModBus::writeMultipleCoils(quint8 slaveAddress, quint16 dataStartAddress, QList<bool> on, quint8 functionCode)
+{
+    if (m_debug)
+    {
+        fprintf(stdout, "DEBUG ModBus::writeMultipleCoils().\n");
+        fflush(stdout);
+    }
+
+    QByteArray payload;
+
+    quint16 count = on.count();
+
+    payload += (unsigned char)(dataStartAddress >> 8);
+    payload += (unsigned char)(dataStartAddress & 0xff);
+    payload += (unsigned char)(count >> 8);
+    payload += (unsigned char)(count & 0xff);
+    unsigned char bytes = count / 8;
+    if ((count % 8) != 0) bytes += 1;
+    payload += bytes;
+
+    quint8 bit = 0;
+    quint8 byte = 0;
+
+    while (!on.isEmpty())
+    {
+        if (on.at(0))
+            byte += 1 << bit;
+
+        on.removeFirst();
+
+        bit++;
+        if (bit == 8)
+        {
+            bit = 0;
+            payload += byte;
+            byte = 0;
+        }
+    }
+
+    if (bit != 0)
+        payload += byte;
+
+    return writeTelegramToQueue(new ModBusTelegram(slaveAddress, functionCode, payload));
+}
+
+quint64 ModBus::writeMultipleRegisters(quint8 slaveAddress, quint16 dataStartAddress, QList<quint16> data, quint8 functionCode)
+{
+    if (m_debug)
+    {
+        fprintf(stdout, "DEBUG ModBus::writeMultipleRegisters().\n");
+        fflush(stdout);
+    }
+
+    QByteArray payload;
+
+    quint16 count = data.count();
+
+    payload += (unsigned char)(dataStartAddress >> 8);
+    payload += (unsigned char)(dataStartAddress & 0xff);
+    payload += (unsigned char)(count >> 8);
+    payload += (unsigned char)(count & 0xff);
+    unsigned char bytes = count * 2;
+    payload += bytes;
+
+    while (!data.isEmpty())
+    {
+        quint16 word = data.takeFirst();
+        payload += (unsigned char)(word >> 8);
+        payload += (unsigned char)(word & 0xff);
+    }
+
+    return writeTelegramToQueue(new ModBusTelegram(slaveAddress, functionCode, payload));
+}
+
+quint64 ModBus::reportSlaveID(quint8 slaveAddress, quint8 functionCode)
+{
+    if (m_debug)
+    {
+        fprintf(stdout, "DEBUG ModBus::reportSlaveID().\n");
+        fflush(stdout);
+    }
+
+    QByteArray payload;
+
+    return writeTelegramToQueue(new ModBusTelegram(slaveAddress, functionCode, payload));
+}
+
+quint64 ModBus::maskWriteRegister(quint8 slaveAddress, quint16 dataAddress, quint16 andMask, quint16 orMask, quint8 functionCode)
+{
+    if (m_debug)
+    {
+        fprintf(stdout, "DEBUG ModBus::maskWriteRegister().\n");
+        fflush(stdout);
+    }
+
+    QByteArray payload;
+
+    payload += (unsigned char)(dataAddress >> 8);
+    payload += (unsigned char)(dataAddress & 0xff);
+    payload += (unsigned char)(andMask >> 8);
+    payload += (unsigned char)(andMask & 0xff);
+    payload += (unsigned char)(orMask >> 8);
+    payload += (unsigned char)(orMask & 0xff);
+
+    return writeTelegramToQueue(new ModBusTelegram(slaveAddress, functionCode, payload));
+}
+
+quint64 ModBus::readFIFOqueue(quint8 slaveAddress, quint16 fifoPointerAddress, quint8 functionCode)
+{
+    if (m_debug)
+    {
+        fprintf(stdout, "DEBUG ModBus::readFIFOqueue().\n");
+        fflush(stdout);
+    }
+
+    QByteArray payload;
+
+    payload += (unsigned char)(fifoPointerAddress >> 8);
+    payload += (unsigned char)(fifoPointerAddress & 0xff);
+
+    return writeTelegramToQueue(new ModBusTelegram(slaveAddress, functionCode, payload));
+}
+
 
 void ModBus::slot_tryToSendNextTelegram()
 {

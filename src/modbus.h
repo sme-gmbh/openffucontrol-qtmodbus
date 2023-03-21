@@ -38,12 +38,36 @@ public:
     // High level access
     quint64 sendRawRequest(quint8 slaveAddress, quint8 functionCode, QByteArray payload);
     QByteArray sendRawRequestBlocking(quint8 slaveAddress, quint8 functionCode, QByteArray payload);
-    quint64 readRegisters(quint8 slaveAddress, quint16 dataStartAddress, quint8 count);
-    quint64 writeRegisters(quint8 slaveAddress, quint16 dataStartAddress, QList<quint16> data);
-    quint16 readRegister(quint8 slaveAddress, quint16 dataAddress);
-    quint16 writeRegister(quint8 slaveAddress, quint16 dataAddress, quint16 data);
-    quint64 readDiscreteInput(quint8 slaveAddress, quint16 dataAddress);
-    quint64 writeCoil(quint8 slaveAddress, quint16 dataAddress, quint8 bit, bool data);
+
+    quint64 readCoils(quint8 slaveAddress, quint16 dataStartAddress, quint16 count, quint8 functionCode = 0x01);
+    quint64 readDiscreteInputs(quint8 slaveAddress, quint16 dataStartAddress, quint16 count, quint8 functionCode = 0x02);
+    quint64 readHoldingRegisters(quint8 slaveAddress, quint16 dataStartAddress, quint8 count, quint8 functionCode = 0x03);
+    quint64 readInputRegisters(quint8 slaveAddress, quint16 dataStartAddress, quint8 count, quint8 functionCode = 0x04);
+
+    quint64 writeSingleCoil(quint8 slaveAddress, quint16 dataAddress, bool on, quint8 functionCode = 0x05);
+    quint64 writeSingleRegister(quint8 slaveAddress, quint16 dataAddress, quint16 data, quint8 functionCode = 0x06);
+
+    quint64 readExceptionStatus(quint8 slaveAddress, quint8 functionCode = 0x07);
+    quint64 readDiagnosticCounter(quint8 slaveAddress, quint8 subFunctionCode, QByteArray data, quint8 functionCode = 0x08);
+
+    quint64 getCommEventCounter(quint8 slaveAddress, quint8 functionCode = 0x0b);
+    quint64 getCommEventLog(quint8 slaveAddress, quint8 functionCode = 0x0c);
+
+    quint64 writeMultipleCoils(quint8 slaveAddress, quint16 dataStartAddress, QList<bool> on, quint8 functionCode = 0x0f);
+    quint64 writeMultipleRegisters(quint8 slaveAddress, quint16 dataStartAddress, QList<quint16> data, quint8 functionCode = 0x10);
+
+    quint64 reportSlaveID(quint8 slaveAddress, quint8 functionCode = 0x11);
+
+//    quint64 readFileRecord(quint8 slaveAddress, quint8 functionCode = 0x14);
+//    quint64 writeFileRecord(quint8 slaveAddress, quint8 functionCode = 0x15);
+
+    quint64 maskWriteRegister(quint8 slaveAddress, quint16 dataAddress, quint16 andMask, quint16 orMask, quint8 functionCode = 0x16);
+//    quint64 readWriteMultipleRegisters(quint8 slaveAddress, quint8 functionCode = 0x17);
+    quint64 readFIFOqueue(quint8 slaveAddress, quint16 fifoPointerAddress, quint8 functionCode = 0x18);
+//    quint64 encapsulatedInterfaceTransport(quint8 slaveAddress, quint8 functionCode = 0x2b);
+
+//    quint64 canOpenGeneralReferenceRequestAndResponsePDU(quint8 slaveAddress, quint8 functionCode = 0x2b);
+//    quint64 readDeviceIdentification(quint8 slaveAddress, quint8 functionCode = 0x2b);
 
     // Low level access; writes to queue that is fed to the byte level access layer
     // Returns the assigned telegram id, which is unique
