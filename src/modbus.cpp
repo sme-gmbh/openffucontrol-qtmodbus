@@ -32,6 +32,10 @@ ModBus::ModBus(QObject *parent, QString interface, bool debug) : QObject(parent)
     m_rx_telegrams = 0;
     m_crc_errors = 0;
 
+    m_requestedCount = 0;
+    m_requestedDataAddress = 0;
+    m_requestedDataStartAddress = 0;
+
     // This timer notifies about a telegram timeout if a unit does not answer
     m_requestTimer.setSingleShot(true);
     m_requestTimer.setInterval(5000);  // was 200
@@ -142,6 +146,9 @@ quint64 ModBus::readCoils(quint8 slaveAddress, quint16 dataStartAddress, quint16
     payload += (unsigned char)(count >> 8);
     payload += (unsigned char)(count & 0xff);
 
+    m_requestedCount = count;
+    m_requestedDataStartAddress = dataStartAddress;
+
     return writeTelegramToQueue(new ModBusTelegram(slaveAddress, functionCode, payload));
 }
 
@@ -159,6 +166,9 @@ quint64 ModBus::readDiscreteInputs(quint8 slaveAddress, quint16 dataStartAddress
     payload += (unsigned char)(dataStartAddress & 0xff);
     payload += (unsigned char)(count >> 8);
     payload += (unsigned char)(count & 0xff);
+
+    m_requestedCount = count;
+    m_requestedDataStartAddress = dataStartAddress;
 
     return writeTelegramToQueue(new ModBusTelegram(slaveAddress, functionCode, payload));
 }
@@ -178,6 +188,9 @@ quint64 ModBus::readHoldingRegisters(quint8 slaveAddress, quint16 dataStartAddre
     payload += (unsigned char)(count >> 8);
     payload += (unsigned char)(count & 0xff);
 
+    m_requestedCount = count;
+    m_requestedDataStartAddress = dataStartAddress;
+
     return writeTelegramToQueue(new ModBusTelegram(slaveAddress, functionCode, payload));
 }
 
@@ -195,6 +208,9 @@ quint64 ModBus::readInputRegisters(quint8 slaveAddress, quint16 dataStartAddress
     payload += (unsigned char)(dataStartAddress & 0xff);
     payload += (unsigned char)(count >> 8);
     payload += (unsigned char)(count & 0xff);
+
+    m_requestedCount = count;
+    m_requestedDataStartAddress = dataStartAddress;
 
     return writeTelegramToQueue(new ModBusTelegram(slaveAddress, functionCode, payload));
 }
@@ -214,6 +230,8 @@ quint64 ModBus::writeSingleCoil(quint8 slaveAddress, quint16 dataAddress, bool o
     payload += (unsigned char)(on ? 0xff : 0x00);
     payload += (unsigned char)0x00;
 
+    m_requestedDataAddress = dataAddress;
+
     return writeTelegramToQueue(new ModBusTelegram(slaveAddress, functionCode, payload));
 }
 
@@ -231,6 +249,8 @@ quint64 ModBus::writeSingleRegister(quint8 slaveAddress, quint16 dataAddress, qu
     payload += (unsigned char)(dataAddress & 0xff);
     payload += (unsigned char)(data >> 8);
     payload += (unsigned char)(data & 0xff);
+
+    m_requestedDataAddress = dataAddress;
 
     return writeTelegramToQueue(new ModBusTelegram(slaveAddress, functionCode, payload));
 }
@@ -302,6 +322,8 @@ quint64 ModBus::writeMultipleCoils(quint8 slaveAddress, quint16 dataStartAddress
     QByteArray payload;
 
     quint16 count = on.count();
+    m_requestedCount = count;
+    m_requestedDataStartAddress = dataStartAddress;
 
     payload += (unsigned char)(dataStartAddress >> 8);
     payload += (unsigned char)(dataStartAddress & 0xff);
@@ -347,6 +369,8 @@ quint64 ModBus::writeMultipleRegisters(quint8 slaveAddress, quint16 dataStartAdd
     QByteArray payload;
 
     quint16 count = data.count();
+    m_requestedCount = count;
+    m_requestedDataStartAddress = dataStartAddress;
 
     payload += (unsigned char)(dataStartAddress >> 8);
     payload += (unsigned char)(dataStartAddress & 0xff);
@@ -387,6 +411,8 @@ quint64 ModBus::maskWriteRegister(quint8 slaveAddress, quint16 dataAddress, quin
     }
 
     QByteArray payload;
+
+    m_requestedDataAddress = dataAddress;
 
     payload += (unsigned char)(dataAddress >> 8);
     payload += (unsigned char)(dataAddress & 0xff);
@@ -697,12 +723,144 @@ void ModBus::tryToParseResponseRaw(QByteArray *buffer)
     buffer->clear();
 }
 
-void ModBus::parseResponse(quint64 id, quint8 slaveAddress, quint8 functionCode, QByteArray data)
+void ModBus::parseResponse(quint64 telegramID, quint8 slaveAddress, quint8 functionCode, QByteArray payload)
 {
     if (m_debug)
     {
-        fprintf(stdout, "DEBUG ModBus::parseResponse().\n");
+        fprintf(stdout, "DEBUG ModBus::parseResponse() fc%i.\n", functionCode);
         fflush(stdout);
+    }
+
+    switch (functionCode)
+    {
+    case 1:
+    case 2:
+    {
+        quint8 bytes;
+        quint16 dataStartAddress = m_requestedDataStartAddress;
+        QList<bool> on;
+
+        if (payload.length() < 1)
+        {
+            fprintf(stdout, "DEBUG ModBus::parseResponse: fc%i data length < 1.\n", functionCode);
+            fflush(stdout);
+            break;
+        }
+
+        bytes = payload.at(0);
+
+        if (payload.length() != (bytes + 1))
+        {
+            fprintf(stdout, "DEBUG ModBus::parseResponse: fc%i data length != bytecount + 1.\n", functionCode);
+            fflush(stdout);
+            break;
+        }
+
+        quint16 bit = 0;
+        quint8 byte = 0;
+
+        while (payload.length() > (byte + 1))
+        {
+            if (payload.at(byte + 1) & (1 << bit))
+                on.append(true);
+            else
+                on.append(false);
+
+            if (on.length() == m_requestedCount)
+                break;
+
+            bit++;
+            if (bit == 8)
+            {
+                bit = 0;
+                byte++;
+            }
+        }
+
+        if (functionCode == 1)
+            emit signal_coilsRead(telegramID, slaveAddress, dataStartAddress, on);
+        else if (functionCode == 2)
+            emit signal_discreteInputsRead(telegramID, slaveAddress, dataStartAddress, on);
+        break;
+    }
+    case 3:
+    case 4:
+    {
+        quint8 bytes;
+        quint16 dataStartAddress = m_requestedDataStartAddress;
+        QList<quint16> data;
+
+        if (payload.length() < 1)
+        {
+            fprintf(stdout, "DEBUG ModBus::parseResponse: fc%i data length < 1.\n", functionCode);
+            fflush(stdout);
+            break;
+        }
+
+        bytes = payload.at(0);
+
+        if (payload.length() != (bytes + 1))
+        {
+            fprintf(stdout, "DEBUG ModBus::parseResponse: fc%i data length != bytecount + 1.\n", functionCode);
+            fflush(stdout);
+            break;
+        }
+
+        if (payload.length() != (m_requestedCount * 2 + 1))
+        {
+            fprintf(stdout, "DEBUG ModBus::parseResponse: fc%i requested length mismatch with resonse length.\n", functionCode);
+            fflush(stdout);
+            break;
+        }
+
+        for (quint16 i = 0; i < m_requestedCount; i++)
+        {
+            quint16 word = 0;
+            word += payload.at(i*2 + 1) << 8;
+            word += payload.at(i*2 + 2);
+            data.append(word);
+        }
+
+        if (functionCode == 3)
+            emit signal_holdingRegistersRead(telegramID, slaveAddress, dataStartAddress, data);
+        else if (functionCode == 4)
+            emit signal_inputRegistersRead(telegramID, slaveAddress, dataStartAddress, data);
+        break;
+    }
+    case 5: // Single coil written
+        break;
+    case 6: // Single holding register written
+        break;
+    case 7:
+        break;
+    case 8:
+        break;
+    case 9:
+        break;
+    case 10:
+        break;
+    case 11:
+        break;
+    case 12:
+        break;
+    case 13:
+        break;
+    case 14:
+        break;
+    case 15: // Multiple coils written
+        break;
+    case 16: // Multiple holding registers written
+        break;
+    default:
+        break;
+
+        // Todo: Implementation of the following signals
+//        emit signal_exceptionStatusRead(quint64 telegramID, quint8 slaveAddress, quint16 data);
+//        emit signal_diagnosticCounterRead(quint64 telegramID, quint8 slaveAddress, quint8 subFunctionCode, quint16 data);
+//        emit signal_commEventCounterRead(quint64 telegramID, quint8 slaveAddress, quint16 data);
+//        emit signal_commEventLogRead(quint64 telegramID, quint8 slaveAddress, QList<quint16> data);
+//        emit signal_slaveIdRead(quint64 telegramID, quint8 slaveAddress, quint8 data);
+
     }
 }
 

@@ -93,11 +93,15 @@ private:
     quint64 m_rx_telegrams;
     quint64 m_crc_errors;
 
+    quint16 m_requestedCount;
+    quint16 m_requestedDataAddress;
+    quint16 m_requestedDataStartAddress;
+
     // Low level access; writes immediately to the bus
     quint64 writeTelegramNow(ModBusTelegram* telegram);
     void writeTelegramRawNow(quint8 slaveAddress, quint8 functionCode, QByteArray data);
     void tryToParseResponseRaw(QByteArray *buffer);
-    void parseResponse(quint64 id, quint8 slaveAddress, quint8 functionCode, QByteArray data);
+    void parseResponse(quint64 telegramID, quint8 slaveAddress, quint8 functionCode, QByteArray payload);
     quint16 checksum(QByteArray data);
     bool checksumOK(QByteArray data);
 
@@ -109,8 +113,18 @@ signals:
 
     // High level response signals
     void signal_exception(quint64 telegramID, quint8 exceptionCode);
-    void signal_registersRead(quint64 telegramID, quint8 slaveAddress, quint16 dataStartAddress, QList<quint16> data);
-    // Todo: Implement more high level response signals
+
+    void signal_coilsRead(quint64 telegramID, quint8 slaveAddress, quint16 dataStartAddress, QList<bool> on);
+    void signal_discreteInputsRead(quint64 telegramID, quint8 slaveAddress, quint16 dataStartAddress, QList<bool> on);
+    void signal_holdingRegistersRead(quint64 telegramID, quint8 slaveAddress, quint16 dataStartAddress, QList<quint16> data);
+    void signal_inputRegistersRead(quint64 telegramID, quint8 slaveAddress, quint16 dataStartAddress, QList<quint16> data);
+
+    void signal_exceptionStatusRead(quint64 telegramID, quint8 slaveAddress, quint16 data);
+    void signal_diagnosticCounterRead(quint64 telegramID, quint8 slaveAddress, quint8 subFunctionCode, quint16 data);
+    void signal_commEventCounterRead(quint64 telegramID, quint8 slaveAddress, quint16 data);
+    void signal_commEventLogRead(quint64 telegramID, quint8 slaveAddress, QList<quint16> data);
+
+    void signal_slaveIdRead(quint64 telegramID, quint8 slaveAddress, quint8 data);
 
 public slots:
 
