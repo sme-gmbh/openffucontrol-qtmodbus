@@ -13,8 +13,8 @@
 ** along with this program. If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
 
-#ifndef MODBUSTELEGRAM_H
-#define MODBUSTELEGRAM_H
+#ifndef OPENFFUCONTROLMODBUSTELEGRAM_H
+#define OPENFFUCONTROLMODBUSTELEGRAM_H
 
 #include <QByteArray>
 
@@ -50,4 +50,4 @@ private:
     quint64 m_id; // Telegram id is unique accross all telegrams per bus
 };
 
-#endif // MODBUSTELEGRAM_H
+#endif // OPENFFUCONTROLMODBUSTELEGRAM_H

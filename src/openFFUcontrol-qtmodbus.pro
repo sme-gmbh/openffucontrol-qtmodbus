@@ -33,6 +33,7 @@ SOURCES += \
 
 HEADERS += \
     modbus.h \
+    modbus_global.h \
     modbustelegram.h
 
 linux-g++: QMAKE_TARGET.arch = $$QMAKE_HOST.arch

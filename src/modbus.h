@@ -13,8 +13,8 @@
 ** along with this program. If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
 
-#ifndef MODBUS_H
-#define MODBUS_H
+#ifndef OPENFFUCONTROLMODBUS_H
+#define OPENFFUCONTROLMODBUS_H
 
 #include <QObject>
 #include <QtSerialPort/QSerialPort>
@@ -23,9 +23,10 @@
 #include <QList>
 #include <QMutex>
 
+#include "modbus_global.h"
 #include "modbustelegram.h"
 
-class ModBus : public QObject
+class MODBUSSHARED_EXPORT ModBus : public QObject
 {
     Q_OBJECT
 public:
@@ -136,4 +137,4 @@ private slots:
 
 };
 
-#endif // MODBUS_H
+#endif // OPENFFUCONTROLMODBUS_H
