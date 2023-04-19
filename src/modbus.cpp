@@ -101,6 +101,11 @@ void ModBus::close()
         m_port->close();
 }
 
+void ModBus::setDelayTxTimer(quint32 milliseconds)
+{
+    m_delayTxTimer.setInterval(milliseconds);
+}
+
 quint64 ModBus::sendRawRequest(quint8 slaveAddress, quint8 functionCode, QByteArray payload)
 {
     if (m_debug)

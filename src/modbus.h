@@ -36,6 +36,8 @@ public:
     bool open(qint32 baudrate = QSerialPort::Baud9600);
     void close();
 
+    void setDelayTxTimer(quint32 milliseconds);
+
     // High level access
     quint64 sendRawRequest(quint8 slaveAddress, quint8 functionCode, QByteArray payload);
     QByteArray sendRawRequestBlocking(quint8 slaveAddress, quint8 functionCode, QByteArray payload);
