@@ -39,10 +39,10 @@ public:
     quint64 sendRawRequest(quint8 slaveAddress, quint8 functionCode, QByteArray payload);
     QByteArray sendRawRequestBlocking(quint8 slaveAddress, quint8 functionCode, QByteArray payload);
 
-    quint64 readCoils(quint8 slaveAddress, quint16 dataStartAddress, quint16 count, quint8 functionCode = 0x01);
-    quint64 readDiscreteInputs(quint8 slaveAddress, quint16 dataStartAddress, quint16 count, quint8 functionCode = 0x02);
-    quint64 readHoldingRegisters(quint8 slaveAddress, quint16 dataStartAddress, quint8 count, quint8 functionCode = 0x03);
-    quint64 readInputRegisters(quint8 slaveAddress, quint16 dataStartAddress, quint8 count, quint8 functionCode = 0x04);
+    quint64 readCoils(quint8 slaveAddress, quint16 dataStartAddress, quint16 count = 1, quint8 functionCode = 0x01);
+    quint64 readDiscreteInputs(quint8 slaveAddress, quint16 dataStartAddress, quint16 count = 1, quint8 functionCode = 0x02);
+    quint64 readHoldingRegisters(quint8 slaveAddress, quint16 dataStartAddress, quint8 count = 1, quint8 functionCode = 0x03);
+    quint64 readInputRegisters(quint8 slaveAddress, quint16 dataStartAddress, quint8 count = 1, quint8 functionCode = 0x04);
 
     quint64 writeSingleCoil(quint8 slaveAddress, quint16 dataAddress, bool on, quint8 functionCode = 0x05);
     quint64 writeSingleRegister(quint8 slaveAddress, quint16 dataAddress, quint16 data, quint8 functionCode = 0x06);
