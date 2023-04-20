@@ -96,10 +96,6 @@ private:
     quint64 m_rx_telegrams;
     quint64 m_crc_errors;
 
-    quint16 m_requestedCount;
-    quint16 m_requestedDataAddress;
-    quint16 m_requestedDataStartAddress;
-
     // Low level access; writes immediately to the bus
     quint64 writeTelegramNow(ModBusTelegram* telegram);
     void writeTelegramRawNow(quint8 slaveAddress, quint8 functionCode, QByteArray data);

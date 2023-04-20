@@ -32,10 +32,6 @@ ModBus::ModBus(QObject *parent, QString interface, bool debug) : QObject(parent)
     m_rx_telegrams = 0;
     m_crc_errors = 0;
 
-    m_requestedCount = 0;
-    m_requestedDataAddress = 0;
-    m_requestedDataStartAddress = 0;
-
     // This timer notifies about a telegram timeout if a unit does not answer
     m_requestTimer.setSingleShot(true);
     m_requestTimer.setInterval(5000);  // was 200
@@ -151,10 +147,10 @@ quint64 ModBus::readCoils(quint8 slaveAddress, quint16 dataStartAddress, quint16
     payload += (unsigned char)(count >> 8);
     payload += (unsigned char)(count & 0xff);
 
-    m_requestedCount = count;
-    m_requestedDataStartAddress = dataStartAddress;
-
-    return writeTelegramToQueue(new ModBusTelegram(slaveAddress, functionCode, payload));
+    ModBusTelegram *telegram = new ModBusTelegram(slaveAddress, functionCode, payload);
+    telegram->requestedCount = count;
+    telegram->requestedDataStartAddress = dataStartAddress;
+    return writeTelegramToQueue(telegram);
 }
 
 quint64 ModBus::readDiscreteInputs(quint8 slaveAddress, quint16 dataStartAddress, quint16 count, quint8 functionCode)
@@ -172,10 +168,10 @@ quint64 ModBus::readDiscreteInputs(quint8 slaveAddress, quint16 dataStartAddress
     payload += (unsigned char)(count >> 8);
     payload += (unsigned char)(count & 0xff);
 
-    m_requestedCount = count;
-    m_requestedDataStartAddress = dataStartAddress;
-
-    return writeTelegramToQueue(new ModBusTelegram(slaveAddress, functionCode, payload));
+    ModBusTelegram *telegram = new ModBusTelegram(slaveAddress, functionCode, payload);
+    telegram->requestedCount = count;
+    telegram->requestedDataStartAddress = dataStartAddress;
+    return writeTelegramToQueue(telegram);
 }
 
 quint64 ModBus::readHoldingRegisters(quint8 slaveAddress, quint16 dataStartAddress, quint8 count, quint8 functionCode)
@@ -193,10 +189,10 @@ quint64 ModBus::readHoldingRegisters(quint8 slaveAddress, quint16 dataStartAddre
     payload += (unsigned char)(count >> 8);
     payload += (unsigned char)(count & 0xff);
 
-    m_requestedCount = count;
-    m_requestedDataStartAddress = dataStartAddress;
-
-    return writeTelegramToQueue(new ModBusTelegram(slaveAddress, functionCode, payload));
+    ModBusTelegram *telegram = new ModBusTelegram(slaveAddress, functionCode, payload);
+    telegram->requestedCount = count;
+    telegram->requestedDataStartAddress = dataStartAddress;
+    return writeTelegramToQueue(telegram);
 }
 
 quint64 ModBus::readInputRegisters(quint8 slaveAddress, quint16 dataStartAddress, quint8 count, quint8 functionCode)
@@ -214,10 +210,10 @@ quint64 ModBus::readInputRegisters(quint8 slaveAddress, quint16 dataStartAddress
     payload += (unsigned char)(count >> 8);
     payload += (unsigned char)(count & 0xff);
 
-    m_requestedCount = count;
-    m_requestedDataStartAddress = dataStartAddress;
-
-    return writeTelegramToQueue(new ModBusTelegram(slaveAddress, functionCode, payload));
+    ModBusTelegram *telegram = new ModBusTelegram(slaveAddress, functionCode, payload);
+    telegram->requestedCount = count;
+    telegram->requestedDataStartAddress = dataStartAddress;
+    return writeTelegramToQueue(telegram);
 }
 
 quint64 ModBus::writeSingleCoil(quint8 slaveAddress, quint16 dataAddress, bool on, quint8 functionCode)
@@ -235,9 +231,10 @@ quint64 ModBus::writeSingleCoil(quint8 slaveAddress, quint16 dataAddress, bool o
     payload += (unsigned char)(on ? 0xff : 0x00);
     payload += (unsigned char)0x00;
 
-    m_requestedDataAddress = dataAddress;
-
-    return writeTelegramToQueue(new ModBusTelegram(slaveAddress, functionCode, payload));
+    ModBusTelegram *telegram = new ModBusTelegram(slaveAddress, functionCode, payload);
+    telegram->requestedCount = 1;
+    telegram->requestedDataStartAddress = dataAddress;
+    return writeTelegramToQueue(telegram);
 }
 
 quint64 ModBus::writeSingleRegister(quint8 slaveAddress, quint16 dataAddress, quint16 data, quint8 functionCode)
@@ -255,9 +252,10 @@ quint64 ModBus::writeSingleRegister(quint8 slaveAddress, quint16 dataAddress, qu
     payload += (unsigned char)(data >> 8);
     payload += (unsigned char)(data & 0xff);
 
-    m_requestedDataAddress = dataAddress;
-
-    return writeTelegramToQueue(new ModBusTelegram(slaveAddress, functionCode, payload));
+    ModBusTelegram *telegram = new ModBusTelegram(slaveAddress, functionCode, payload);
+    telegram->requestedCount = 1;
+    telegram->requestedDataStartAddress = dataAddress;
+    return writeTelegramToQueue(telegram);
 }
 
 quint64 ModBus::readExceptionStatus(quint8 slaveAddress, quint8 functionCode)
@@ -327,8 +325,6 @@ quint64 ModBus::writeMultipleCoils(quint8 slaveAddress, quint16 dataStartAddress
     QByteArray payload;
 
     quint16 count = on.count();
-    m_requestedCount = count;
-    m_requestedDataStartAddress = dataStartAddress;
 
     payload += (unsigned char)(dataStartAddress >> 8);
     payload += (unsigned char)(dataStartAddress & 0xff);
@@ -360,7 +356,10 @@ quint64 ModBus::writeMultipleCoils(quint8 slaveAddress, quint16 dataStartAddress
     if (bit != 0)
         payload += byte;
 
-    return writeTelegramToQueue(new ModBusTelegram(slaveAddress, functionCode, payload));
+    ModBusTelegram *telegram = new ModBusTelegram(slaveAddress, functionCode, payload);
+    telegram->requestedCount = count;
+    telegram->requestedDataStartAddress = dataStartAddress;
+    return writeTelegramToQueue(telegram);
 }
 
 quint64 ModBus::writeMultipleRegisters(quint8 slaveAddress, quint16 dataStartAddress, QList<quint16> data, quint8 functionCode)
@@ -374,8 +373,6 @@ quint64 ModBus::writeMultipleRegisters(quint8 slaveAddress, quint16 dataStartAdd
     QByteArray payload;
 
     quint16 count = data.count();
-    m_requestedCount = count;
-    m_requestedDataStartAddress = dataStartAddress;
 
     payload += (unsigned char)(dataStartAddress >> 8);
     payload += (unsigned char)(dataStartAddress & 0xff);
@@ -391,7 +388,10 @@ quint64 ModBus::writeMultipleRegisters(quint8 slaveAddress, quint16 dataStartAdd
         payload += (unsigned char)(word & 0xff);
     }
 
-    return writeTelegramToQueue(new ModBusTelegram(slaveAddress, functionCode, payload));
+    ModBusTelegram *telegram = new ModBusTelegram(slaveAddress, functionCode, payload);
+    telegram->requestedCount = count;
+    telegram->requestedDataStartAddress = dataStartAddress;
+    return writeTelegramToQueue(telegram);
 }
 
 quint64 ModBus::reportSlaveID(quint8 slaveAddress, quint8 functionCode)
@@ -417,8 +417,6 @@ quint64 ModBus::maskWriteRegister(quint8 slaveAddress, quint16 dataAddress, quin
 
     QByteArray payload;
 
-    m_requestedDataAddress = dataAddress;
-
     payload += (unsigned char)(dataAddress >> 8);
     payload += (unsigned char)(dataAddress & 0xff);
     payload += (unsigned char)(andMask >> 8);
@@ -426,7 +424,10 @@ quint64 ModBus::maskWriteRegister(quint8 slaveAddress, quint16 dataAddress, quin
     payload += (unsigned char)(orMask >> 8);
     payload += (unsigned char)(orMask & 0xff);
 
-    return writeTelegramToQueue(new ModBusTelegram(slaveAddress, functionCode, payload));
+    ModBusTelegram *telegram = new ModBusTelegram(slaveAddress, functionCode, payload);
+    telegram->requestedCount = 1;
+    telegram->requestedDataStartAddress = dataAddress;
+    return writeTelegramToQueue(telegram);
 }
 
 quint64 ModBus::readFIFOqueue(quint8 slaveAddress, quint16 fifoPointerAddress, quint8 functionCode)
@@ -742,7 +743,7 @@ void ModBus::parseResponse(quint64 telegramID, quint8 slaveAddress, quint8 funct
     case 2:
     {
         quint8 bytes;
-        quint16 dataStartAddress = m_requestedDataStartAddress;
+        quint16 dataStartAddress = m_currentTelegram->requestedDataStartAddress;
         QList<bool> on;
 
         if (payload.length() < 1)
@@ -771,7 +772,7 @@ void ModBus::parseResponse(quint64 telegramID, quint8 slaveAddress, quint8 funct
             else
                 on.append(false);
 
-            if (on.length() == m_requestedCount)
+            if (on.length() == m_currentTelegram->requestedCount)
                 break;
 
             bit++;
@@ -792,7 +793,7 @@ void ModBus::parseResponse(quint64 telegramID, quint8 slaveAddress, quint8 funct
     case 4:
     {
         quint8 bytes;
-        quint16 dataStartAddress = m_requestedDataStartAddress;
+        quint16 dataStartAddress = m_currentTelegram->requestedDataStartAddress;
         QList<quint16> data;
 
         if (payload.length() < 1)
@@ -811,18 +812,18 @@ void ModBus::parseResponse(quint64 telegramID, quint8 slaveAddress, quint8 funct
             break;
         }
 
-        if (payload.length() != (m_requestedCount * 2 + 1))
+        if (payload.length() != (m_currentTelegram->requestedCount * 2 + 1))
         {
             fprintf(stdout, "DEBUG ModBus::parseResponse: fc%i requested length mismatch with resonse length.\n", functionCode);
             fflush(stdout);
             break;
         }
 
-        for (quint16 i = 0; i < m_requestedCount; i++)
+        for (quint16 i = 0; i < m_currentTelegram->requestedCount; i++)
         {
             quint16 word = 0;
-            word += payload.at(i*2 + 1) << 8;
-            word += payload.at(i*2 + 2);
+            word += (quint8)payload.at(i*2 + 1) << 8;
+            word += (quint8)payload.at(i*2 + 2);
             data.append(word);
         }
 

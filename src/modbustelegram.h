@@ -38,6 +38,8 @@ public:
 
     quint8 slaveAddress;
     quint8 functionCode;
+    quint16 requestedDataStartAddress;
+    quint16 requestedCount;
     QByteArray data;
 
     int repeatCount;    // Set to different value if that telegram is important and should be autorepeated

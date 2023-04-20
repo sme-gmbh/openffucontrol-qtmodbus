@@ -24,6 +24,8 @@ ModBusTelegram::ModBusTelegram()
         id = 1;
 
     repeatCount = 1;
+    requestedDataStartAddress = 0;
+    requestedCount = 0;
 }
 
 ModBusTelegram::ModBusTelegram(quint8 slaveAddress, quint8 functionCode, QByteArray data)
@@ -38,6 +40,8 @@ ModBusTelegram::ModBusTelegram(quint8 slaveAddress, quint8 functionCode, QByteAr
     this->functionCode = functionCode;
     this->data = data;
     repeatCount = 1;
+    requestedDataStartAddress = 0;
+    requestedCount = 0;
 }
 
 bool ModBusTelegram::needsAnswer()
