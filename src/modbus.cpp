@@ -772,6 +772,8 @@ void ModBus::tryToParseResponseRaw(QByteArray *buffer)
         fflush(stdout);
     }
 
+    m_currentTelegram->repeatCount = 0; // Do not send it again, as we have an answer now
+
     emit signal_responseRawComplete(m_currentTelegram->getID(), *buffer);
     emit signal_responseRaw(m_currentTelegram->getID(), address, functionCode, data);
     parseResponse(m_currentTelegram->getID(), address, functionCode, data);
