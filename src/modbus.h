@@ -72,9 +72,15 @@ public:
 //    quint64 canOpenGeneralReferenceRequestAndResponsePDU(quint8 slaveAddress, quint8 functionCode = 0x2b);
 //    quint64 readDeviceIdentification(quint8 slaveAddress, quint8 functionCode = 0x2b);
 
+    int getSizeOfTelegramQueue(bool highPriorityQueue = false);
+    void clearTelegramQueue(bool highPriorityQueue = false);
+
     // Low level access; writes to queue that is fed to the byte level access layer
     // Returns the assigned telegram id, which is unique
-    quint64 writeTelegramToQueue(ModBusTelegram* telegram);
+    quint64 writeTelegramToQueue(ModBusTelegram* telegram, bool highPriority = false);
+
+    int getTelegramRepeatCount() const;
+    void setTelegramRepeatCount(int telegramRepeatCount);
 
     quint64 rx_telegrams() const;
     quint64 crc_errors() const;
@@ -91,8 +97,10 @@ private:
 
     bool m_transactionPending;
     QMutex m_telegramQueueMutex;
-    QList<ModBusTelegram*> m_telegramQueue;
+    QList<ModBusTelegram*> m_telegramQueue_standardPriority;
+    QList<ModBusTelegram*> m_telegramQueue_highPriority;
     ModBusTelegram* m_currentTelegram;
+    int m_telegramRepeatCount;
     quint64 m_rx_telegrams;
     quint64 m_crc_errors;
 

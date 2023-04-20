@@ -22,7 +22,7 @@ class ModBusTelegram
 {
 public:
     ModBusTelegram();
-    ModBusTelegram(quint8 slaveAddress, quint8 functionCode, QByteArray data);
+    ModBusTelegram(quint8 slaveAddress, quint8 functionCode, QByteArray data, int repeatCount = 1);
 
     typedef enum {
         E_ILLEGAL_FUNCTION = 0x01,
