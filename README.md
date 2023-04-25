@@ -1,6 +1,6 @@
 # ModBus library for openFFUcontrol
 This is the ModBus library used in the open source filter fan unit control system openFFUcontrol.
-It is used as a comunication driver to fans and control units (OCUs). The
+It is used as a communication driver to fans and control units (OCUs). The
 library is based on Qt5 and interfaces non-blocking with signals and slots.
 
 ## Building and installing
