@@ -13,8 +13,8 @@
 ** along with this program. If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
 
-#ifndef MODBUSTELEGRAM_H
-#define MODBUSTELEGRAM_H
+#ifndef OPENFFUCONTROLMODBUSTELEGRAM_H
+#define OPENFFUCONTROLMODBUSTELEGRAM_H
 
 #include <QByteArray>
 
@@ -22,7 +22,7 @@ class ModBusTelegram
 {
 public:
     ModBusTelegram();
-    ModBusTelegram(quint8 slaveAddress, quint8 functionCode, QByteArray data);
+    ModBusTelegram(quint8 slaveAddress, quint8 functionCode, QByteArray data, int repeatCount = 1);
 
     typedef enum {
         E_ILLEGAL_FUNCTION = 0x01,
@@ -38,6 +38,8 @@ public:
 
     quint8 slaveAddress;
     quint8 functionCode;
+    quint16 requestedDataStartAddress;
+    quint16 requestedCount;
     QByteArray data;
 
     int repeatCount;    // Set to different value if that telegram is important and should be autorepeated
@@ -50,4 +52,4 @@ private:
     quint64 m_id; // Telegram id is unique accross all telegrams per bus
 };
 
-#endif // MODBUSTELEGRAM_H
+#endif // OPENFFUCONTROLMODBUSTELEGRAM_H

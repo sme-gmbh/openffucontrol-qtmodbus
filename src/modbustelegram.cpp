@@ -24,9 +24,11 @@ ModBusTelegram::ModBusTelegram()
         id = 1;
 
     repeatCount = 1;
+    requestedDataStartAddress = 0;
+    requestedCount = 0;
 }
 
-ModBusTelegram::ModBusTelegram(quint8 slaveAddress, quint8 functionCode, QByteArray data)
+ModBusTelegram::ModBusTelegram(quint8 slaveAddress, quint8 functionCode, QByteArray data, int repeatCount)
 {
     static quint64 id = 1;  // Start counting telegram id with 1. 0 is reserved for error
     this->m_id = id;
@@ -37,7 +39,9 @@ ModBusTelegram::ModBusTelegram(quint8 slaveAddress, quint8 functionCode, QByteAr
     this->slaveAddress = slaveAddress;
     this->functionCode = functionCode;
     this->data = data;
-    repeatCount = 1;
+    this->repeatCount = repeatCount;
+    requestedDataStartAddress = 0;
+    requestedCount = 0;
 }
 
 bool ModBusTelegram::needsAnswer()

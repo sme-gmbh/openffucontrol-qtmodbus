@@ -13,8 +13,8 @@
 ** along with this program. If not, see <http://www.gnu.org/licenses/>.
 **********************************************************************/
 
-#ifndef MODBUS_H
-#define MODBUS_H
+#ifndef OPENFFUCONTROLMODBUS_H
+#define OPENFFUCONTROLMODBUS_H
 
 #include <QObject>
 #include <QtSerialPort/QSerialPort>
@@ -23,9 +23,10 @@
 #include <QList>
 #include <QMutex>
 
+#include "modbus_global.h"
 #include "modbustelegram.h"
 
-class ModBus : public QObject
+class MODBUSSHARED_EXPORT ModBus : public QObject
 {
     Q_OBJECT
 public:
@@ -35,14 +36,16 @@ public:
     bool open(qint32 baudrate = QSerialPort::Baud9600);
     void close();
 
+    void setDelayTxTimer(quint32 milliseconds);
+
     // High level access
     quint64 sendRawRequest(quint8 slaveAddress, quint8 functionCode, QByteArray payload);
     QByteArray sendRawRequestBlocking(quint8 slaveAddress, quint8 functionCode, QByteArray payload);
 
-    quint64 readCoils(quint8 slaveAddress, quint16 dataStartAddress, quint16 count, quint8 functionCode = 0x01);
-    quint64 readDiscreteInputs(quint8 slaveAddress, quint16 dataStartAddress, quint16 count, quint8 functionCode = 0x02);
-    quint64 readHoldingRegisters(quint8 slaveAddress, quint16 dataStartAddress, quint8 count, quint8 functionCode = 0x03);
-    quint64 readInputRegisters(quint8 slaveAddress, quint16 dataStartAddress, quint8 count, quint8 functionCode = 0x04);
+    quint64 readCoils(quint8 slaveAddress, quint16 dataStartAddress, quint16 count = 1, quint8 functionCode = 0x01);
+    quint64 readDiscreteInputs(quint8 slaveAddress, quint16 dataStartAddress, quint16 count = 1, quint8 functionCode = 0x02);
+    quint64 readHoldingRegisters(quint8 slaveAddress, quint16 dataStartAddress, quint8 count = 1, quint8 functionCode = 0x03);
+    quint64 readInputRegisters(quint8 slaveAddress, quint16 dataStartAddress, quint8 count = 1, quint8 functionCode = 0x04);
 
     quint64 writeSingleCoil(quint8 slaveAddress, quint16 dataAddress, bool on, quint8 functionCode = 0x05);
     quint64 writeSingleRegister(quint8 slaveAddress, quint16 dataAddress, quint16 data, quint8 functionCode = 0x06);
@@ -69,9 +72,15 @@ public:
 //    quint64 canOpenGeneralReferenceRequestAndResponsePDU(quint8 slaveAddress, quint8 functionCode = 0x2b);
 //    quint64 readDeviceIdentification(quint8 slaveAddress, quint8 functionCode = 0x2b);
 
+    int getSizeOfTelegramQueue(bool highPriorityQueue = false);
+    void clearTelegramQueue(bool highPriorityQueue = false);
+
     // Low level access; writes to queue that is fed to the byte level access layer
     // Returns the assigned telegram id, which is unique
-    quint64 writeTelegramToQueue(ModBusTelegram* telegram);
+    quint64 writeTelegramToQueue(ModBusTelegram* telegram, bool highPriority = false);
+
+    int getTelegramRepeatCount() const;
+    void setTelegramRepeatCount(int telegramRepeatCount);
 
     quint64 rx_telegrams() const;
     quint64 crc_errors() const;
@@ -88,14 +97,12 @@ private:
 
     bool m_transactionPending;
     QMutex m_telegramQueueMutex;
-    QList<ModBusTelegram*> m_telegramQueue;
+    QList<ModBusTelegram*> m_telegramQueue_standardPriority;
+    QList<ModBusTelegram*> m_telegramQueue_highPriority;
     ModBusTelegram* m_currentTelegram;
+    int m_telegramRepeatCount;
     quint64 m_rx_telegrams;
     quint64 m_crc_errors;
-
-    quint16 m_requestedCount;
-    quint16 m_requestedDataAddress;
-    quint16 m_requestedDataStartAddress;
 
     // Low level access; writes immediately to the bus
     quint64 writeTelegramNow(ModBusTelegram* telegram);
@@ -136,4 +143,4 @@ private slots:
 
 };
 
-#endif // MODBUS_H
+#endif // OPENFFUCONTROLMODBUS_H
