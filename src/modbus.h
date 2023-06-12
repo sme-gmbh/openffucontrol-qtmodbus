@@ -33,7 +33,10 @@ public:
     explicit ModBus(QObject *parent, QString interface, bool debug = false);
     ~ModBus();
 
-    bool open(qint32 baudrate = QSerialPort::Baud9600);
+    bool open(qint32 baudrate = QSerialPort::Baud9600,
+              QSerialPort::DataBits dataBits = QSerialPort::Data8,
+              QSerialPort::Parity parity = QSerialPort::NoParity,
+              QSerialPort::StopBits stopBits = QSerialPort::TwoStop);
     void close();
 
     void setDelayTxTimer(quint32 milliseconds);

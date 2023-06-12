@@ -63,7 +63,7 @@ ModBus::~ModBus()
     }
 }
 
-bool ModBus::open(qint32 baudrate)
+bool ModBus::open(qint32 baudrate, QSerialPort::DataBits dataBits, QSerialPort::Parity parity, QSerialPort::StopBits stopBits)
 {
     if (m_debug)
     {
@@ -73,9 +73,9 @@ bool ModBus::open(qint32 baudrate)
 
     m_port->setBaudRate(baudrate);
 
-    m_port->setDataBits(QSerialPort::Data8);
-    m_port->setParity(QSerialPort::NoParity);
-    m_port->setStopBits(QSerialPort::TwoStop);
+    m_port->setDataBits(dataBits);
+    m_port->setParity(parity);
+    m_port->setStopBits(stopBits);
     m_port->setFlowControl(QSerialPort::NoFlowControl);
     connect(m_port, SIGNAL(readyRead()), this, SLOT(slot_readyRead()));
     bool openOK = m_port->open(QIODevice::ReadWrite);
