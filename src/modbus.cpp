@@ -987,7 +987,7 @@ void ModBus::slot_requestTimer_fired()
         fprintf(stdout, "DEBUG ModBus::slot_requestTimer_fired().\n");
         fflush(stdout);
     }
-    if (m_currentTelegram->needsAnswer())
+    if (m_currentTelegram->needsAnswer() && (m_currentTelegram->repeatCount == 0))
     {
         emit signal_transactionLost(m_currentTelegram->getID());
     }
